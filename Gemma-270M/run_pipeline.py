@@ -52,28 +52,39 @@ def print_banner(title: str, char: str = "="):
 
 
 def clean_data_files(data_dir: str = "data", logger=None):
-    """Clean up old data files"""
-    print_banner("STEP 1: CLEANING OLD DATA FILES")
+    """Clean up old training artifacts (NOT the preprocessed dataset files)"""
+    print_banner("STEP 1: CLEANING OLD TRAINING ARTIFACTS")
     
-    data_path = Path(data_dir)
-    
-    # Remove entire data directory if it exists
-    if data_path.exists():
-        print(f"🗑️  Removing data directory: {data_path.resolve()}")
-        shutil.rmtree(data_path)
-        print(f"✅ Removed {data_path} directory")
+    # Clean checkpoints directory (actual training outputs)
+    checkpoints_path = Path("checkpoints")
+    if checkpoints_path.exists():
+        print(f"🗑️  Cleaning training checkpoints: {checkpoints_path.resolve()}")
+        shutil.rmtree(checkpoints_path)
+        checkpoints_path.mkdir(parents=True, exist_ok=True)
+        print(f"✅ Cleaned training checkpoints directory")
         if logger:
-            logger.info(f"Removed data directory: {data_path}")
-    else:
-        print(f"✅ Data directory {data_path} does not exist")
+            logger.info(f"Cleaned training checkpoints directory: {checkpoints_path}")
     
-    # Also clean any stray .bin files in current directory
-    for bin_file in Path(".").glob("*.bin"):
-        if bin_file.name in ["train.bin", "validation.bin"]:
-            print(f"🗑️  Removing stray binary file: {bin_file}")
-            bin_file.unlink()
-            if logger:
-                logger.info(f"Removed stray binary file: {bin_file}")
+    # Clean log files
+    for log_file in Path(".").glob("*.log"):
+        print(f"🗑️  Removing old log file: {log_file}")
+        log_file.unlink()
+        if logger:
+            logger.info(f"Removed log file: {log_file}")
+    
+    # Keep the preprocessed data files - they are expensive to regenerate!
+    data_path = Path(data_dir)
+    if data_path.exists():
+        train_bin = data_path / "train.bin"
+        val_bin = data_path / "validation.bin"
+        if train_bin.exists() and val_bin.exists():
+            print(f"✅ Keeping existing preprocessed dataset files:")
+            print(f"   - {train_bin} ({train_bin.stat().st_size / 1e6:.1f} MB)")
+            print(f"   - {val_bin} ({val_bin.stat().st_size / 1e6:.1f} MB)")
+        else:
+            print(f"ℹ️  Preprocessed dataset files not found - will be created during data step")
+    else:
+        print(f"ℹ️  Data directory does not exist - will be created during data step")
     
     return True
 
@@ -97,11 +108,11 @@ def create_fresh_data(config: ExperimentConfig, logger=None):
         print(f"🔧 Using tokenizer: {config.data.tokenizer_name}")
         print(f"⚙️  Parallel processes: {config.data.num_proc}")
         
-        # Create binary dataset (this will download if needed)
+        # Create binary dataset (this will download if needed, but won't reprocess if exists)
         train_path, val_path = processor.create_binary_dataset(
             dataset_name=config.data.dataset_name,
             output_dir=config.data.data_dir,
-            force_reprocess=True  # Always reprocess for fresh data
+            force_reprocess=False  # Don't reprocess expensive data unless needed
         )
         
         # Update config paths
