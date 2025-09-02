@@ -57,11 +57,16 @@ Layer 12:     Full Attention
 
 ## 🚀 Quick Start
 
+> **Hardware Requirements**: NVIDIA GPU with 4GB+ VRAM recommended. Tested on RTX 4070 (8GB).
+> **Software Requirements**: Python 3.11+, CUDA 12.1+, PyTorch 2.5+
+
 ### Installation
 ```bash
 git clone https://github.com/SiavoshZarrasvand/ai-builds.git
 cd ai-builds/Gemma-270M
-pip install -r requirements.txt
+
+# Install dependencies with uv (recommended)
+uv sync
 ```
 
 ### Training
@@ -181,6 +186,18 @@ Gemma-270M/
 
 ## 🔧 Configuration Options
 
+### Pre-configured Training Presets
+
+**Optimized Config** (`configs/optimized_config.yaml`) - Recommended:
+- Batch size: 16, Sequence length: 384
+- Memory usage: ~24% of 8GB GPU
+- Best for: Story generation, long-form text, conversational AI
+
+**Conservative Config** (`configs/conservative_config.yaml`) - Fallback:
+- Batch size: 16, Sequence length: 256  
+- Memory usage: ~22% of 8GB GPU
+- Best for: Stable training, resource-constrained environments
+
 ### Model Configuration
 ```yaml
 model:
@@ -190,17 +207,19 @@ model:
   n_heads: 8                # Attention heads
   vocab_size: 50257         # Vocabulary size
   context_length: 32768     # Maximum sequence length
+  sliding_window: 512       # Local attention window size
 ```
 
 ### Training Configuration  
 ```yaml
 training:
-  batch_size: 16            # Optimized batch size
-  block_size: 384           # Optimized sequence length
+  batch_size: 16            # Optimized batch size (GPU memory efficient)
+  block_size: 384           # Optimized sequence length (3x improvement)
   gradient_accumulation_steps: 64  # Effective batch = 1024
   learning_rate: 1e-4       # Peak learning rate
   max_iters: 150000         # Training iterations
   device: cuda              # Training device
+  dtype: bfloat16           # Mixed precision for efficiency
 ```
 
 ### Generation Configuration
@@ -215,41 +234,73 @@ generation:
 
 ## 📈 Performance Benchmarks
 
-### Memory Usage (8GB RTX 4070)
-| Configuration | Memory Used | GPU Utilization | Status |
-|---------------|-------------|-----------------|--------|
-| Batch=16, Seq=384 | 1.9GB | 24.2% | ✅ Recommended |
-| Batch=32, Seq=128 | 1.8GB | 22.3% | ✅ Alternative |
-| Batch=16, Seq=256 | 1.6GB | 22.4% | ✅ Conservative |
+### GPU Memory Optimization Results
 
-### Training Speed
-- **Tokens/second**: ~6,144 tokens per training step
-- **Steps/hour**: ~1,800 steps (optimized config)
-- **Convergence**: Stable training with effective batch size 1024
+Extensive testing on **NVIDIA GeForce RTX 4070 Laptop GPU (8GB VRAM)** with 341.8M parameter model:
+
+#### Optimized Configuration Comparison
+| Configuration | Batch Size | Sequence Length | Tokens/Batch | Memory Usage | GPU Util | Status |
+|---------------|------------|-----------------|--------------|--------------|----------|--------|
+| **Original** | 32 | 128 | 4,096 | 1.78GB | 22.3% | ✅ Safe |
+| **Conservative** | 16 | 256 | 4,096 | 1.6GB | 22.4% | ✅ Safe |
+| **Optimized** | 16 | 384 | 6,144 | 1.9GB | 24.2% | ⭐ **RECOMMENDED** |
+
+#### Key Optimization Benefits
+- **🎯 3.0x longer context**: 384 vs 128 tokens for better coherence
+- **📈 1.5x more tokens per batch**: 6,144 vs 4,096 tokens
+- **🧠 Improved text quality**: Longer sequences enable better narrative understanding
+- **⚡ Maintained stability**: Effective batch size of 1,024 preserved
+- **🛡️ Excellent safety margin**: Only 24.2% of 8GB GPU memory used
+
+### Training Performance
+- **Tokens/step**: 6,144 tokens per training step (optimized config)
+- **Training throughput**: Improved 1.5x over baseline config
+- **Memory efficiency**: 75%+ GPU memory available for other processes
+- **Stability**: Excellent - well within safe memory limits
+- **Context improvement**: 3x longer sequences (384 vs 128 tokens)
+- **Effective batch size**: 1,024 (maintained for stable gradients)
 
 ### Generation Speed  
 - **Tokens/second**: ~50-100 (depending on sequence length)
 - **Batch generation**: Efficient parallel processing
 - **Interactive response**: <2 seconds for typical responses
 
-## 🧪 Testing
+## 🧪 Testing & Validation
 
-Run comprehensive tests:
+### Model Architecture Tests
 ```bash
-# Test model architecture
+# Test model components and parameter counts
 python test_model.py
 
-# Test training pipeline
+# Test training pipeline without actual training
 python test_training.py
 
-# Dry run training (no actual training)
+# GPU memory analysis
+python test_270m_config.py
+```
+
+### Training Validation
+```bash
+# Dry run training (validate setup without training)
 python train.py --dry-run
 
-# Validate configuration
+# Validate configuration files
 python train.py --validate-config
 
-# Print model architecture
+# Print model architecture and parameter counts
 python train.py --print-model
+
+# Quick training test with small iterations
+python train.py --preset small --training.max_iters 100
+```
+
+### GPU Memory Testing
+```bash
+# Test memory usage with different batch sizes
+python test_270m_config.py --test-memory
+
+# Benchmark generation performance
+python generate.py --checkpoint checkpoints/best_model.pt --benchmark
 ```
 
 ## 🚀 Advanced Usage
@@ -316,7 +367,7 @@ Contributions are welcome! Please see our [contribution guidelines](CONTRIBUTING
 ```bash
 git clone https://github.com/SiavoshZarrasvand/ai-builds.git
 cd ai-builds/Gemma-270M
-pip install -e .
+uv sync --dev
 ```
 
 ### Code Style
