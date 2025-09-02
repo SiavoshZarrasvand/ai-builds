@@ -46,7 +46,7 @@ class ModelConfig:
     ])
     
     # Data type and attention scaling
-    dtype: torch.dtype = torch.bfloat16
+    dtype: torch.dtype = torch.float32
     query_pre_attn_scalar: int = 256
     
     def __post_init__(self):
@@ -94,7 +94,7 @@ class TrainingConfig:
     grad_clip: float = 1.0
     
     # Mixed precision and device
-    dtype: str = "bfloat16"  # "float32", "bfloat16", "float16" 
+    dtype: str = "float32"  # "float32", "bfloat16", "float16"
     device: str = "cuda"
     compile_model: bool = False
     

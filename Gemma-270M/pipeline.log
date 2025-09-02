@@ -1,0 +1,7 @@
+2025-09-03 02:00:50,671 - INFO - Created fresh training data: .\train.bin, .\validation.bin
+2025-09-03 02:04:39,341 - INFO - Training completed: {'final_train_loss': 4.366747252464294, 'final_val_loss': 4.36960461139679, 'best_val_loss': 4.373450204372406, 'total_steps': 500, 'total_time': 212.15678358078003}
+2025-09-03 02:04:45,254 - INFO - Tests completed: 0/2 passed
+2025-09-03 02:04:45,254 - INFO - Examples placeholder created
+2025-09-03 02:04:45,254 - INFO - Pipeline completed in 654.1s with results: {'clean': True, 'data': True, 'train': True, 'test': False, 'examples': True}
+2025-09-03 02:07:04,656 - INFO - Removed old data file: train.bin
+2025-09-03 02:07:04,656 - INFO - Removed old data file: validation.bin

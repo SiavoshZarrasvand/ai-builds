@@ -26,7 +26,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from torch.cuda.amp import GradScaler, autocast
+try:
+    from torch.amp import GradScaler, autocast
+except ImportError:
+    from torch.cuda.amp import GradScaler, autocast
 
 from .model import GemmaModel
 from .data import GemmaDataLoader
@@ -73,7 +76,14 @@ class GemmaTrainer:
         
         # Initialize data loader
         if data_loader is None:
-            self.data_loader = GemmaDataLoader(config.data, config.training.block_size)
+            self.data_loader = GemmaDataLoader(
+                train_path=config.data.train_path,
+                val_path=config.data.val_path,
+                batch_size=config.training.batch_size,
+                block_size=config.training.block_size,
+                device=config.training.device,
+                device_type=config.training.device
+            )
         else:
             self.data_loader = data_loader
             
@@ -84,7 +94,13 @@ class GemmaTrainer:
         self.scheduler = self._create_scheduler()
         
         # Initialize mixed precision scaler if using mixed precision
-        self.scaler = GradScaler() if config.training.dtype in ["float16", "bfloat16"] else None
+        if config.training.dtype in ["float16", "bfloat16"]:
+            try:
+                self.scaler = GradScaler('cuda')
+            except TypeError:
+                self.scaler = GradScaler()
+        else:
+            self.scaler = None
         
         # Setup output directory
         self.output_dir = Path(config.training.output_dir)
@@ -310,16 +326,17 @@ class GemmaTrainer:
                 for i in range(eval_iters):
                     try:
                         if split == 'train':
-                            batch = self.data_loader.get_batch('train', self.config.training.batch_size)
+                            batch = self.data_loader.get_batch('train')
                         else:
-                            batch = self.data_loader.get_batch('val', self.config.training.batch_size)
+                            batch = self.data_loader.get_batch('val')
                         
                         input_ids, targets = batch
                         input_ids = input_ids.to(self.device)
                         targets = targets.to(self.device)
                         
                         # Forward pass
-                        with autocast(enabled=self.scaler is not None):
+                        device_type = 'cuda' if self.device.type == 'cuda' else 'cpu'
+                        with autocast(device_type, enabled=self.scaler is not None):
                             logits, loss = self.model(input_ids, targets)
                         
                         total_loss += loss.item()
@@ -349,13 +366,14 @@ class GemmaTrainer:
         for micro_step in range(self.config.training.gradient_accumulation_steps):
             try:
                 # Get batch
-                batch = self.data_loader.get_batch('train', self.config.training.batch_size)
+                batch = self.data_loader.get_batch('train')
                 input_ids, targets = batch
                 input_ids = input_ids.to(self.device)
                 targets = targets.to(self.device)
                 
                 # Forward pass with mixed precision
-                with autocast(enabled=self.scaler is not None):
+                device_type = 'cuda' if self.device.type == 'cuda' else 'cpu'
+                with autocast(device_type, enabled=self.scaler is not None):
                     logits, loss = self.model(input_ids, targets)
                     loss = loss / self.config.training.gradient_accumulation_steps  # Scale loss
                 
