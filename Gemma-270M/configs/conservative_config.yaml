@@ -1,0 +1,78 @@
+data:
+  data_dir: .
+  dataset_name: roneneldan/TinyStories
+  force_reprocess: false
+  num_proc: 8
+  num_workers: 0
+  pin_memory: true
+  tokenizer_name: gpt2
+  train_path: train.bin
+  val_path: validation.bin
+description: 'Conservative optimized config: batch=16, seq=256'
+model:
+  context_length: 32768
+  dtype: torch.bfloat16
+  emb_dim: 896
+  head_dim: 112
+  hidden_dim: 3584
+  layer_types:
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - full_attention
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - full_attention
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - full_attention
+  - sliding_attention
+  - sliding_attention
+  - sliding_attention
+  - full_attention
+  n_heads: 8
+  n_kv_groups: 1
+  n_layers: 22
+  qk_norm: true
+  query_pre_attn_scalar: 256
+  rope_base: 1000000.0
+  rope_local_base: 10000.0
+  sliding_window: 512
+  vocab_size: 50257
+name: gemma-270m-conservative
+tags:
+- gemma-270m
+- conservative
+- stable
+training:
+  batch_size: 16
+  beta1: 0.9
+  beta2: 0.95
+  block_size: 256
+  compile_model: false
+  device: cuda
+  dtype: bfloat16
+  early_stopping_patience: null
+  eps: 1.0e-09
+  eval_interval: 500
+  eval_iters: 500
+  grad_clip: 1.0
+  gradient_accumulation_steps: 64
+  learning_rate: 0.0001
+  log_interval: 10
+  max_iters: 150000
+  min_lr: 5.0e-05
+  output_dir: checkpoints
+  resume_from: null
+  save_best_only: true
+  save_interval: 1000
+  warmup_steps: 1000
+  weight_decay: 0.1
