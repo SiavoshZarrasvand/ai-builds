@@ -117,6 +117,30 @@ uv run jupyter lab
 
 Open your browser to `http://localhost:8888` and navigate to `Gemma_3_270_M_Small_Language_Model_Scratch_Final.ipynb`.
 
+## Verify your setup
+
+Run these commands to confirm CUDA and all dependencies are properly installed:
+
+```powershell
+# 1) Check NVIDIA driver and CUDA runtime
+nvidia-smi
+
+# 2) Verify PyTorch sees the GPU
+python -c "import torch; print('CUDA available:', torch.cuda.is_available()); print('GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'No GPU')"
+
+# 3) Smoke-test key Python dependencies
+python -c "import torch; import transformers; import datasets; import tiktoken; import matplotlib.pyplot as plt; import numpy as np; from tqdm import tqdm; print('All imports successful!')"
+
+# 4) Confirm JupyterLab is installed
+jupyter lab --version
+```
+
+Expected results:
+- nvidia-smi prints GPU info and CUDA version
+- CUDA available: True, GPU: NVIDIA GeForce RTX 4070 Laptop GPU
+- All imports successful!
+- JupyterLab version prints (e.g., 4.4.6)
+
 ## Quick Start (Alternative)
 
 If you already have the environment set up, you can quickly run the project:
