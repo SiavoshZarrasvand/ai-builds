@@ -150,7 +150,7 @@ class DataConfig:
     # File paths
     train_path: str = "train.bin"
     val_path: str = "validation.bin"
-    data_dir: str = "."
+    data_dir: str = "data"
     
     # Data loading
     pin_memory: bool = True

@@ -59,13 +59,21 @@ def clean_data_files(data_dir: str = "data", logger=None):
     
     # Remove entire data directory if it exists
     if data_path.exists():
-        print(f"🗑️  Removing data directory: {data_path}")
+        print(f"🗑️  Removing data directory: {data_path.resolve()}")
         shutil.rmtree(data_path)
         print(f"✅ Removed {data_path} directory")
         if logger:
             logger.info(f"Removed data directory: {data_path}")
     else:
         print(f"✅ Data directory {data_path} does not exist")
+    
+    # Also clean any stray .bin files in current directory
+    for bin_file in Path(".").glob("*.bin"):
+        if bin_file.name in ["train.bin", "validation.bin"]:
+            print(f"🗑️  Removing stray binary file: {bin_file}")
+            bin_file.unlink()
+            if logger:
+                logger.info(f"Removed stray binary file: {bin_file}")
     
     return True
 

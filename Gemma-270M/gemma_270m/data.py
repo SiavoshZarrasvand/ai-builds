@@ -130,7 +130,7 @@ class DataProcessor:
     def create_binary_dataset(
         self, 
         dataset_name: str = "roneneldan/TinyStories", 
-        output_dir: str = ".",
+        output_dir: str = "data",
         force_reprocess: bool = False
     ) -> Tuple[str, str]:
         """
@@ -139,8 +139,12 @@ class DataProcessor:
         Returns:
             Tuple of (train_path, validation_path)
         """
-        train_path = os.path.join(output_dir, "train.bin")
-        val_path = os.path.join(output_dir, "validation.bin")
+        # Ensure output directory is properly resolved and created
+        output_path = Path(output_dir).resolve()
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        train_path = str(output_path / "train.bin")
+        val_path = str(output_path / "validation.bin")
         
         # Skip if files exist and not forcing reprocess
         if not force_reprocess and os.path.exists(train_path) and os.path.exists(val_path):
@@ -163,7 +167,7 @@ class DataProcessor:
         # concatenate all the ids in each dataset into one large file we can use for training
         for split, dset in tokenized.items():
             arr_len = np.sum(dset['len'], dtype=np.uint64)
-            filename = os.path.join(output_dir, f'{split}.bin')
+            filename = str(output_path / f'{split}.bin')
             dtype = np.uint16  # (can do since enc.max_token_value == 50256 is < 2**16)
             arr = np.memmap(filename, dtype=dtype, mode='w+', shape=(arr_len,))
             total_batches = 1024
