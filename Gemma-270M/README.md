@@ -60,25 +60,40 @@ Layer 12:     Full Attention
 > **Hardware Requirements**: NVIDIA GPU with 4GB+ VRAM recommended. Tested on RTX 4070 (8GB).
 > **Software Requirements**: Python 3.11+, CUDA 12.1+, PyTorch 2.5+
 
-### Installation
-```bash
+### Installation (Windows Only)
+```powershell
 git clone https://github.com/SiavoshZarrasvand/ai-builds.git
 cd ai-builds/Gemma-270M
 
-# Install dependencies with uv (recommended)
+# Create virtual environment and install dependencies
+uv venv --python 3.11
+.venv\Scripts\activate
+
+# Install dependencies with CUDA support (automatic)
 uv sync
 ```
 
-### Training
+### Training Pipeline
 ```bash
-# Train with optimized configuration (recommended)
+# Complete pipeline with all steps (recommended)
+python run_pipeline.py --quick
+
+# Full model training (270M parameters, ~2-4 hours)
+python run_pipeline.py
+
+# Individual steps
+python run_pipeline.py --steps clean data  # Just data preparation
+python run_pipeline.py --steps train       # Just training
+python run_pipeline.py --steps test        # Just testing
+```
+
+### Legacy Training Scripts
+```bash
+# Train with optimized configuration (legacy)
 python train.py --config configs/optimized_config.yaml
 
-# Quick test with small model
+# Quick test with small model (legacy)
 python train.py --preset small --training.max_iters 1000
-
-# Custom training parameters  
-python train.py --training.batch_size 16 --training.block_size 384 --training.learning_rate 1e-4
 ```
 
 ### Text Generation
@@ -264,6 +279,145 @@ Extensive testing on **NVIDIA GeForce RTX 4070 Laptop GPU (8GB VRAM)** with 341.
 - **Tokens/second**: ~50-100 (depending on sequence length)
 - **Batch generation**: Efficient parallel processing
 - **Interactive response**: <2 seconds for typical responses
+
+## 🎯 Examples and Applications
+
+Once you've trained a model, you can create various applications using the trained checkpoints:
+
+### Story Generation
+```python
+# Load trained model for story generation
+from gemma_270m.inference import create_generator_from_checkpoint
+from transformers import GPT2Tokenizer
+
+tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+generator = create_generator_from_checkpoint(
+    checkpoint_path="checkpoints/best_model.pt",
+    tokenizer=tokenizer
+)
+
+# Generate a story
+story = generator.generate_text(
+    prompt="Once upon a time in a magical forest,",
+    max_new_tokens=500,
+    temperature=0.8,
+    top_p=0.9
+)
+print(story)
+```
+
+### Interactive Chat Interface
+```python
+# Create a simple chat interface
+while True:
+    user_input = input("You: ")
+    if user_input.lower() in ['quit', 'exit']:
+        break
+        
+    response = generator.generate_text(
+        prompt=f"Human: {user_input}\nAssistant:",
+        max_new_tokens=150,
+        temperature=0.7,
+        stop_sequences=["Human:", "\n\n"]
+    )
+    print(f"Assistant: {response}")
+```
+
+### Batch Text Generation
+```python
+# Generate multiple variations of a prompt
+prompts = [
+    "The future of technology is",
+    "In the year 2050, humans will",
+    "The most important discovery in science was"
+]
+
+for prompt in prompts:
+    responses = generator.generate_text(
+        prompt=prompt,
+        max_new_tokens=100,
+        num_return_sequences=3,
+        temperature=0.8
+    )
+    print(f"\nPrompt: {prompt}")
+    for i, response in enumerate(responses, 1):
+        print(f"{i}. {response}")
+```
+
+### Fine-tuning for Specific Tasks
+```python
+# Fine-tune the model on domain-specific data
+from gemma_270m import GemmaTrainer
+
+# Load pre-trained model
+config = ExperimentConfig.load("configs/optimized_config.yaml")
+config.training.resume_from = "checkpoints/best_model.pt"
+config.training.learning_rate = 5e-5  # Lower LR for fine-tuning
+config.training.max_iters = 1000      # Fewer iterations
+
+# Update data paths to your domain-specific dataset
+config.data.dataset_name = "your-domain/dataset"
+
+trainer = GemmaTrainer(config)
+results = trainer.train()
+```
+
+## 🏗️ Full Model Training
+
+For training the complete 341.8M parameter Gemma-270M model:
+
+### Hardware Requirements
+- **GPU**: NVIDIA RTX 4070 (8GB) or better
+- **RAM**: 16GB+ system RAM recommended
+- **Storage**: 50GB+ free space for datasets and checkpoints
+- **Time**: 2-4 hours for full training (150,000 iterations)
+
+### Full Training Commands
+```bash
+# Complete training pipeline with full model
+python run_pipeline.py
+
+# Custom full training with specific parameters
+python run_pipeline.py --config configs/optimized_config.yaml
+
+# Resume training from checkpoint
+python run_pipeline.py --steps train --config configs/optimized_config.yaml
+```
+
+### Training Configuration for Full Model
+```yaml
+# configs/optimized_config.yaml
+model:
+  n_layers: 22              # Full model size
+  emb_dim: 896              # Full embedding dimension
+  hidden_dim: 3584          # Full feed-forward dimension
+
+training:
+  max_iters: 150000         # Full training iterations
+  batch_size: 16            # Memory-optimized
+  block_size: 384           # Longer context for quality
+  eval_interval: 500        # Regular evaluation
+  save_interval: 1000       # Checkpoint every 1K steps
+```
+
+### Expected Training Results
+- **Training time**: ~3.5 hours on RTX 4070
+- **Final validation loss**: ~3.8-4.2 (depending on data)
+- **Model size**: 341.8M parameters (~1.3GB)
+- **Memory usage**: ~24% of 8GB GPU (1.9GB)
+- **Checkpoints**: Saved every 1000 steps + best model
+
+### Monitoring Training Progress
+```bash
+# View training logs in real-time
+tail -f pipeline.log
+
+# Check GPU utilization during training
+nvidia-smi -l 1
+
+# Monitor checkpoint directory
+ls -la checkpoints/
+```
 
 ## 🧪 Testing & Validation
 
