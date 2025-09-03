@@ -15,11 +15,11 @@ print("=" * 50)
 
 # Test 1: Basic PyTorch setup
 print("\n=== Test 1: Basic PyTorch Setup ===")
-print(f"✓ PyTorch version: {torch.__version__}")
-print(f"✓ CUDA available: {torch.cuda.is_available()}")
+print(f"[PASS] PyTorch version: {torch.__version__}")
+print(f"[PASS] CUDA available: {torch.cuda.is_available()}")
 if torch.cuda.is_available():
-    print(f"✓ CUDA device: {torch.cuda.get_device_name(0)}")
-    print(f"✓ CUDA memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+    print(f"[PASS] CUDA device: {torch.cuda.get_device_name(0)}")
+    print(f"[PASS] CUDA memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
 
 # Test 2: Rope Positional Encoding functions
 print("\n=== Test 2: RoPE Functions ===")
@@ -49,16 +49,16 @@ try:
     head_dim = 64
     context_length = 128
     cos, sin = compute_rope_params(head_dim, context_length=context_length)
-    print(f"✓ RoPE params computed: cos.shape={cos.shape}, sin.shape={sin.shape}")
+    print(f"[PASS] RoPE params computed: cos.shape={cos.shape}, sin.shape={sin.shape}")
     
     # Test apply_rope
     batch_size, num_heads, seq_len = 2, 4, 32
     x = torch.randn(batch_size, num_heads, seq_len, head_dim)
     x_rope = apply_rope(x, cos, sin)
-    print(f"✓ RoPE applied: input.shape={x.shape}, output.shape={x_rope.shape}")
+    print(f"[PASS] RoPE applied: input.shape={x.shape}, output.shape={x_rope.shape}")
     
 except Exception as e:
-    print(f"✗ RoPE test failed: {e}")
+    print(f"[FAIL] RoPE test failed: {e}")
 
 # Test 3: RMSNorm
 print("\n=== Test 3: RMSNorm ===")
@@ -84,10 +84,10 @@ try:
     rms_norm = RMSNorm(emb_dim)
     x = torch.randn(2, 32, emb_dim)
     x_norm = rms_norm(x)
-    print(f"✓ RMSNorm: input.shape={x.shape}, output.shape={x_norm.shape}")
-    print(f"✓ RMSNorm parameters: {sum(p.numel() for p in rms_norm.parameters())}")
+    print(f"[PASS] RMSNorm: input.shape={x.shape}, output.shape={x_norm.shape}")
+    print(f"[PASS] RMSNorm parameters: {sum(p.numel() for p in rms_norm.parameters())}")
 except Exception as e:
-    print(f"✗ RMSNorm test failed: {e}")
+    print(f"[FAIL] RMSNorm test failed: {e}")
 
 # Test 4: GroupedQueryAttention (simplified)
 print("\n=== Test 4: Grouped Query Attention ===")
@@ -171,11 +171,11 @@ try:
     
     # Forward pass
     output = attention(x, mask, cos, sin)
-    print(f"✓ GroupedQueryAttention: input.shape={x.shape}, output.shape={output.shape}")
-    print(f"✓ Attention parameters: {sum(p.numel() for p in attention.parameters()):,}")
+    print(f"[PASS] GroupedQueryAttention: input.shape={x.shape}, output.shape={output.shape}")
+    print(f"[PASS] Attention parameters: {sum(p.numel() for p in attention.parameters()):,}")
     
 except Exception as e:
-    print(f"✗ GroupedQueryAttention test failed: {e}")
+    print(f"[FAIL] GroupedQueryAttention test failed: {e}")
 
 # Test 5: Config and basic model structure
 print("\n=== Test 5: Config and Model ===")
@@ -201,10 +201,10 @@ GEMMA3_CONFIG_270M = {
     "query_pre_attn_scalar": 256,
 }
 
-print(f"✓ Config loaded: {len(GEMMA3_CONFIG_270M)} parameters")
-print(f"✓ Model should have {GEMMA3_CONFIG_270M['n_layers']} layers")
-print(f"✓ Vocab size: {GEMMA3_CONFIG_270M['vocab_size']:,}")
-print(f"✓ Embedding dim: {GEMMA3_CONFIG_270M['emb_dim']}")
+print(f"[PASS] Config loaded: {len(GEMMA3_CONFIG_270M)} parameters")
+print(f"[PASS] Model should have {GEMMA3_CONFIG_270M['n_layers']} layers")
+print(f"[PASS] Vocab size: {GEMMA3_CONFIG_270M['vocab_size']:,}")
+print(f"[PASS] Embedding dim: {GEMMA3_CONFIG_270M['emb_dim']}")
 
 # Calculate approximate model size
 embedding_params = GEMMA3_CONFIG_270M['vocab_size'] * GEMMA3_CONFIG_270M['emb_dim']
@@ -215,7 +215,7 @@ layer_params_estimate = GEMMA3_CONFIG_270M['n_layers'] * (
     4 * GEMMA3_CONFIG_270M['emb_dim'] * GEMMA3_CONFIG_270M['emb_dim']  # Attention projections
 )
 total_params_estimate = embedding_params + output_head_params + layer_params_estimate
-print(f"✓ Estimated model size: ~{total_params_estimate/1e6:.1f}M parameters")
+print(f"[PASS] Estimated model size: ~{total_params_estimate/1e6:.1f}M parameters")
 
-print("\n🎉 Model architecture tests completed!")
+print("\n[SUCCESS] Model architecture tests completed!")
 print("\nNext: Test data loading and training configuration")

@@ -65,12 +65,15 @@ def clean_data_files(data_dir: str = "data", logger=None):
         if logger:
             logger.info(f"Cleaned training checkpoints directory: {checkpoints_path}")
     
-    # Clean log files
+    # Clean old log files (but skip current pipeline.log as it's in use)
     for log_file in Path(".").glob("*.log"):
-        print(f"🗑️  Removing old log file: {log_file}")
-        log_file.unlink()
-        if logger:
-            logger.info(f"Removed log file: {log_file}")
+        if log_file.name != "pipeline.log":  # Don't delete current log file
+            print(f"🗑️  Removing old log file: {log_file}")
+            log_file.unlink()
+            if logger:
+                logger.info(f"Removed log file: {log_file}")
+        else:
+            print(f"ℹ️  Keeping current pipeline.log (in use)")
     
     # Keep the preprocessed data files - they are expensive to regenerate!
     data_path = Path(data_dir)

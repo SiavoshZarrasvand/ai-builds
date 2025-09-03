@@ -26,13 +26,17 @@ if torch.cuda.is_available():
 
 # Test 2: Check data files
 print("\n=== Data Files Check ===")
-train_exists = os.path.exists('train.bin')
-val_exists = os.path.exists('validation.bin')
-print(f"train.bin exists: {train_exists} ({os.path.getsize('train.bin') / 1e6:.0f} MB)" if train_exists else "train.bin: Missing!")
-print(f"validation.bin exists: {val_exists} ({os.path.getsize('validation.bin') / 1e6:.0f} MB)" if val_exists else "validation.bin: Missing!")
+# Check in data directory instead of root
+train_path = 'data/train.bin' if os.path.exists('data/train.bin') else 'train.bin'
+val_path = 'data/validation.bin' if os.path.exists('data/validation.bin') else 'validation.bin'
+
+train_exists = os.path.exists(train_path)
+val_exists = os.path.exists(val_path)
+print(f"train.bin exists: {train_exists} ({os.path.getsize(train_path) / 1e6:.0f} MB)" if train_exists else "train.bin: Missing!")
+print(f"validation.bin exists: {val_exists} ({os.path.getsize(val_path) / 1e6:.0f} MB)" if val_exists else "validation.bin: Missing!")
 
 if not (train_exists and val_exists):
-    print("❌ Binary data files missing! Run tokenization first.")
+    print("[FAIL] Binary data files missing! Run tokenization first.")
     exit(1)
 
 # Test 3: Training Configuration
@@ -65,9 +69,9 @@ print("\n=== Data Loading Test ===")
 def get_batch(split):
     """Load batch from binary files"""
     if split == 'train':
-        data = np.memmap('train.bin', dtype=np.uint16, mode='r')
+        data = np.memmap(train_path, dtype=np.uint16, mode='r')
     else:
-        data = np.memmap('validation.bin', dtype=np.uint16, mode='r')
+        data = np.memmap(val_path, dtype=np.uint16, mode='r')
     
     ix = torch.randint(len(data) - config['block_size'], (config['batch_size'],))
     x = torch.stack([torch.from_numpy((data[i:i+config['block_size']]).astype(np.int64)) for i in ix])
@@ -81,12 +85,12 @@ def get_batch(split):
 
 try:
     X, y = get_batch("train")
-    print(f"✓ Train batch: X.shape={X.shape}, y.shape={y.shape}")
+    print(f"[PASS] Train batch: X.shape={X.shape}, y.shape={y.shape}")
     X_val, y_val = get_batch("val")
-    print(f"✓ Validation batch: X_val.shape={X_val.shape}, y_val.shape={y_val.shape}")
-    print(f"✓ Token range: {X.min().item()}-{X.max().item()}")
+    print(f"[PASS] Validation batch: X_val.shape={X_val.shape}, y_val.shape={y_val.shape}")
+    print(f"[PASS] Token range: {X.min().item()}-{X.max().item()}")
 except Exception as e:
-    print(f"❌ Data loading failed: {e}")
+    print(f"[FAIL] Data loading failed: {e}")
     exit(1)
 
 # Test 5: Simple Model for Testing (not full Gemma)
@@ -151,15 +155,15 @@ class SimpleTestModel(nn.Module):
 try:
     model = SimpleTestModel().to(device)
     total_params = sum(p.numel() for p in model.parameters())
-    print(f"✓ Test model created: {total_params:,} parameters")
+    print(f"[PASS] Test model created: {total_params:,} parameters")
     
     # Test forward pass
     with ctx:
         logits, loss = model(X, y)
-    print(f"✓ Forward pass: logits.shape={logits.shape}, loss={loss.item():.4f}")
+    print(f"[PASS] Forward pass: logits.shape={logits.shape}, loss={loss.item():.4f}")
     
 except Exception as e:
-    print(f"❌ Model test failed: {e}")
+    print(f"[FAIL] Model test failed: {e}")
     exit(1)
 
 # Test 6: Optimizer and Training Step
@@ -177,10 +181,10 @@ try:
     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
     optimizer.step()
     
-    print(f"✓ Training step completed: loss={loss.item():.4f}")
+    print(f"[PASS] Training step completed: loss={loss.item():.4f}")
     
 except Exception as e:
-    print(f"❌ Training step failed: {e}")
+    print(f"[FAIL] Training step failed: {e}")
     exit(1)
 
 # Test 7: Short Training Loop
@@ -208,7 +212,7 @@ for step in range(10):
         print(f"  Step {step}: loss={loss.item():.4f}")
 
 end_time = time.time()
-print(f"✓ Mini training completed in {end_time - start_time:.2f}s")
+print(f"[PASS] Mini training completed in {end_time - start_time:.2f}s")
 
 # Test 8: GPU Memory Check
 if torch.cuda.is_available():
@@ -217,12 +221,12 @@ if torch.cuda.is_available():
     print(f"Reserved: {torch.cuda.memory_reserved() / 1e6:.0f} MB")
     print(f"Max allocated: {torch.cuda.max_memory_allocated() / 1e6:.0f} MB")
 
-print("\n🎉 Training loop test completed successfully!")
+print("\n[SUCCESS] Training loop test completed successfully!")
 print("\nNext steps:")
-print("1. ✅ Training infrastructure works")  
-print("2. 🔄 Convert to full Gemma architecture")
-print("3. 🏗️  Build Python project structure")
-print("4. 🚀 Scale up for full training")
+print("1. [OK] Training infrastructure works")  
+print("2. [TODO] Convert to full Gemma architecture")
+print("3. [BUILD]  Build Python project structure")
+print("4. [SCALE] Scale up for full training")
 
 if torch.cuda.is_available():
     torch.cuda.empty_cache()  # Clean up
