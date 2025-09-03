@@ -8,7 +8,7 @@ data:
   tokenizer_name: gpt2
   train_path: data/train.bin
   val_path: data/validation.bin
-description: 'Conservative optimized config: batch=16, seq=256'
+description: 'Mid-range cloud compute config: batch=16, seq=256. Requires 16GB+ VRAM (RTX A4000/T4x2)'
 model:
   context_length: 32768
   dtype: torch.float32
@@ -50,8 +50,11 @@ model:
 name: gemma-270m-conservative
 tags:
 - gemma-270m
-- conservative
+- mid-range
 - stable
+- t4
+- a4000
+- cost-effective
 training:
   batch_size: 16
   beta1: 0.9

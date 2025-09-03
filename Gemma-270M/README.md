@@ -57,7 +57,9 @@ Layer 12:     Full Attention
 
 ## 🚀 Quick Start
 
-> **Hardware Requirements**: NVIDIA GPU with 4GB+ VRAM recommended. Tested on RTX 4070 (8GB).
+> **Note**: This project demonstrates how to build a complete training pipeline from scratch. For practical applications, consider using pre-trained models (see Practical Usage section).
+
+> **Hardware Requirements**: NVIDIA GPU with 4GB+ VRAM recommended for pipeline testing. High-end cloud GPUs (A100/V100) required for full training.
 > **Software Requirements**: Python 3.11+, CUDA 12.1+, PyTorch 2.5+
 
 ### Installation (Windows Only)
@@ -73,18 +75,35 @@ uv venv --python 3.11
 uv sync
 ```
 
-### Training Pipeline
+### Training Pipeline (Educational)
 ```bash
-# Complete pipeline with all steps (recommended)
+# Quick pipeline test (500 steps, ~10 minutes)
 python run_pipeline.py --quick
 
-# Full model training (270M parameters, ~2-4 hours)
-python run_pipeline.py
+# Full model training (requires A100/V100, ~17 days)
+python run_pipeline.py --config configs/optimized_config.yaml
 
-# Individual steps
+# Individual steps for learning
 python run_pipeline.py --steps clean data  # Just data preparation
 python run_pipeline.py --steps train       # Just training
 python run_pipeline.py --steps test        # Just testing
+```
+
+### Practical Usage (Recommended)
+For production applications, use pre-trained models:
+
+```python
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+# Load a pre-trained model (much faster than training from scratch)
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+model = AutoModelForCausalLM.from_pretrained("gpt2")  # 124M params
+# Or use: "gpt2-medium" (355M), "gpt2-large" (774M)
+
+# Generate text
+input_ids = tokenizer.encode("Hello world", return_tensors="pt")
+output = model.generate(input_ids, max_length=50, do_sample=True)
+print(tokenizer.decode(output[0]))
 ```
 
 ### Legacy Training Scripts
@@ -362,15 +381,55 @@ trainer = GemmaTrainer(config)
 results = trainer.train()
 ```
 
+## ☁️ Cloud Compute Options
+
+For serious training workloads, use cloud compute with high-end GPUs:
+
+### Recommended Cloud Providers
+
+**Paperspace Gradient**
+- A100 (40GB): $3.18/hour - Ideal for full training
+- V100 (16GB): $2.30/hour - Good for medium training
+- Setup: `pip install gradient && gradient jobs create`
+
+**Modal Labs**  
+- A100 (40GB): $4.00/hour - Excellent for research
+- V100 (16GB): $2.48/hour - Cost-effective training
+- Setup: Serverless GPU functions, automatic scaling
+
+**Google Cloud Platform**
+- A100 (40GB): $3.673/hour - Enterprise reliability 
+- T4 (16GB): $0.95/hour - Budget-friendly option
+- Setup: `gcloud compute instances create`
+
+**AWS EC2**
+- p4d.xlarge (A100 40GB): $3.25/hour - Production ready
+- p3.2xlarge (V100 16GB): $3.06/hour - Reliable training
+- Setup: Use Deep Learning AMI
+
+**Azure Machine Learning**
+- Standard_NC24ads_A100_v4: $3.40/hour - Full training
+- Standard_NC6s_v3 (V100): $3.06/hour - Medium workloads
+
+### Configuration for Cloud Training
+```bash
+# High-end cloud (A100/V100)
+python run_pipeline.py --config configs/optimized_config.yaml
+
+# Mid-range cloud (T4/A4000) 
+python run_pipeline.py --config configs/conservative_config.yaml
+```
+
 ## 🏗️ Full Model Training
 
 For training the complete 341.8M parameter Gemma-270M model:
 
 ### Hardware Requirements
-- **GPU**: NVIDIA RTX 4070 (8GB) or better
+- **Cloud GPU**: A100 (40GB) or V100 (16GB) recommended
+- **Local GPU**: RTX 4070 (8GB) minimum for quick testing
 - **RAM**: 16GB+ system RAM recommended
 - **Storage**: 50GB+ free space for datasets and checkpoints
-- **Time**: 2-4 hours for full training (150,000 iterations)
+- **Time**: 2-4 hours on A100, ~17 days on RTX 4070
 
 ### Full Training Commands
 ```bash

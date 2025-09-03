@@ -33,4 +33,5 @@ Thumbs.db
 *.swp
 *.swo
 
+./training
 *.log

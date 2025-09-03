@@ -8,7 +8,7 @@ data:
   tokenizer_name: gpt2
   train_path: data/train.bin
   val_path: data/validation.bin
-description: 'Optimized Gemma-270M config: batch=16, seq=384 for better coherence'
+description: 'High-end cloud compute config: batch=16, seq=384. Requires 24GB+ VRAM (A6000/V100/A100)'
 model:
   context_length: 32768
   dtype: torch.float32
@@ -50,8 +50,11 @@ model:
 name: gemma-270m-optimized
 tags:
 - gemma-270m
-- optimized
-- long-context
+- cloud-compute
+- high-memory
+- a100
+- v100
+- production
 training:
   batch_size: 16
   beta1: 0.9

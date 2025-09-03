@@ -1,6 +1,0 @@
-[2025-09-03 03:32:52] Trainer initialized successfully
-[2025-09-03 03:32:52] Model: {'total_parameters': 211727616, 'trainable_parameters': 211727616, 'model_size_mb': 807.6767578125, 'layers': 16, 'embedding_dim': 768, 'hidden_dim': 3072, 'heads': 8, 'vocab_size': 50257}
-[2025-09-03 03:32:52] Training config: {'batch_size': 8, 'block_size': 256, 'gradient_accumulation_steps': 32, 'effective_batch_size': 256, 'max_iters': 50000, 'learning_rate': 0.0001, 'min_lr': 5e-05, 'weight_decay': 0.1, 'warmup_steps': 500, 'device': 'cuda', 'mixed_precision': False}
-[2025-09-03 03:32:52] Starting training...
-[2025-09-03 03:32:52] Training for 50000 steps
-[2025-09-03 03:37:16] Step     10 | Loss: 287.3689 | LR: 1.00e-04 | Tokens/s: 2325 | Time: 28.19s
